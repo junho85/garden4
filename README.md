@@ -21,7 +21,7 @@ USERS = junho85,user2,user3
 ## collect_slack_messages.py
 * slack_messages 를 가져와서 db 에 넣습니다.
 
-## generate_attendence_csv.py
+## generate_attendance_csv.py
 * slack_messages 의 데이터를 읽어서 출석부를 csv 를 생성합니다. 이 값을 스프레드시트에 붙여 넣어서 사용합니다.
 
 ## python modules
