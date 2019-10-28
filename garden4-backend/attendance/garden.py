@@ -31,6 +31,9 @@ class Garden:
     def connect_mongo(self):
         return pymongo.MongoClient("mongodb://%s:%s" % (self.mongo_host, self.mongo_port))
 
+    def get_member(self):
+        return self.users
+
     def find_attend(self, oldest, latest):
         print("find_attend")
         print(oldest)
@@ -47,6 +50,8 @@ class Garden:
             print(message["ts"])
             print(message)
 
+    # 특정 유저의 전체 출석부를 생성함
+    # TODO 출석부를 DB에 넣고 마지막 생성된 출석부 이후의 데이터로 추가 출석부 만들도록 하자
     def find_attend_by_user(self, user):
         conn = self.connect_mongo()
 
@@ -120,6 +125,33 @@ class Garden:
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
         mongo_collection.remove()
 
+    # 특정일의 출석 데이터 불러오기
+    # TODO DB 에 넣고 DB 정보 가져 오도록 변경. 지금은 모든 유저의 모든 출석 데이터 가져온 다음 거기서 특정일의 출석 데이터를 뽑아내고 있음.
+    def get_attendance(self, selected_date):
+        attend_dict = {}
+
+        # get all users attendance info
+        for user in self.users:
+            attends = self.find_attend_by_user(user)
+            attend_dict[user] = attends
+
+        result = {}
+        result2 = []
+
+        # make users - dates - first_ts
+        for user in attend_dict:
+            if user not in result:
+                result[user] = {}
+
+            result[user][selected_date] = None
+
+            if selected_date in attend_dict[user]:
+                result[user][selected_date] = attend_dict[user][selected_date][0]["ts"]
+
+            result2.append({"user": user, "first_ts": result[user][selected_date]})
+
+        return result2
+
     def generate_attendance_csv(self):
         attend_dict = {}
 
@@ -130,6 +162,7 @@ class Garden:
         result = {}
 
         selected_date = datetime(2019, 10, 24).date()
+        # selected_date = datetime.strptime("20191024", "%Y%m%d").date()
         print("=======")
         for days in range(10):
             # print dates
@@ -152,6 +185,6 @@ class Garden:
 
         # print result csv
         for (user, dates) in result.items():
-            for (date, first_ts) in dates.items():
+            for first_ts in dates.values():
                 print(first_ts, end=',')
             print("")

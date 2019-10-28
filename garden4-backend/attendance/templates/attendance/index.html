@@ -1,8 +1,104 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>hello world</title>
+    <meta charset="UTF-8">
+    <title>정원사들 시즌4 - 출석부</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            console.log("ready!");
+            get_users();
+            get_attendance();
+        });
+
+        function collect_attendance() {
+            $.ajax({
+                method: "GET",
+                url: "collect/",
+                dataType: "JSON",
+                data: {}
+            }).done(function (data) {
+            })
+        }
+        function get_users() {
+            $.ajax({
+                method: "GET",
+                url: "users/",
+                dataType: "JSON",
+                data: {}
+            }).done(function (data) {
+                let html = "";
+                $.each(data, function(index, user) {
+                    html += `<a href="https://github.com/${user}" target="_blank"><img src="https://avatars.githubusercontent.com/${user}" width="60" /></a>`;
+                });
+                $("#users").html(html);
+            });
+        }
+        function get_attendance() {
+            let date = "20191028";
+
+            $.ajax({
+                method: "GET",
+                url: "get/" + date,
+                dataType: "JSON",
+                data: {}
+            }).done(function (data) {
+                // console.log(data);
+                let html = `<table>
+<thead>
+<th>user</th>
+<th>first_ts</th>
+</thead>
+<tbody>
+`;
+                $.each(data, function(index, row) {
+                    html += `<tr>
+<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>
+<td>${row.first_ts || ""}</td>
+</tr>`;
+                });
+
+                html += "</tbody></table>";
+                $("#attendance").html(html);
+            }).fail(function (data) {
+                console.log(data);
+                alert("실패");
+            });
+        }
+    </script>
 </head>
 <body>
-hello world
+<header>
+    <div class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container d-flex justify-content-between">
+            <a href="#" class="navbar-brand d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                     stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true" class="mr-2"
+                     viewBox="0 0 24 24" focusable="false">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <strong>정원사들</strong>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main role="main" class="flex-shrink-0">
+    <div class="container">
+        <div id="attendance"></div>
+        <div id="users"></div>
+    </div>
+</main>
+
+<footer class="footer mt-auto py-3">
+    <div class="container">
+        <span class="text-muted">정원사들</span>
+    </div>
+</footer>
+
 </body>
 </html>

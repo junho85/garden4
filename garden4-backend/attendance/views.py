@@ -2,12 +2,19 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from datetime import datetime
 from .garden import Garden
+import pprint
 
 
 # Create your views here.
 def index(request):
     context = {}
     return render(request, 'attendance/index.html', context)
+
+
+def users(request):
+    garden = Garden()
+    users = garden.get_member()
+    return JsonResponse(users, safe=False)
 
 
 def user(request, user):
@@ -39,3 +46,11 @@ def csv(request):
     garden.generate_attendance_csv()
 
     return JsonResponse({})
+
+
+# 특정일의 출석 데이터 불러오기
+def get(request, date):
+    garden = Garden()
+    result = garden.get_attendance(datetime.strptime(date, "%Y%m%d").date())
+    pprint.pprint(result)
+    return JsonResponse(result, safe=False)

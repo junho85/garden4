@@ -19,6 +19,9 @@ PORT = 27017
 USERS = junho85,user2,user3
 ```
 
+## WEB
+* http://localhost:8000/attendance/
+
 ## API
 * /attendance/user/<user> - user 의 출석 데이터를 불러옵니다.
   * e.g. /attendance/user/junho85 - junho85 의 출석 데이터를 불러옵니다.
@@ -30,6 +33,8 @@ USERS = junho85,user2,user3
   * slack_messages 의 데이터를 읽어서 출석부를 csv 를 생성합니다.
   * 이 값을 스프레드시트에 붙여 넣어서 사용합니다.
   * TODO API 결과로 가져올 수 있도록
+* /attendance/get/<date> - 특정 날짜의 출석부 조회하기
+  * http://localhost:8000/attendance/get/20191028
 
 ## python modules
 ```
