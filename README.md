@@ -3,6 +3,7 @@
 * slack #commit 채널에 올라온 메시지들을 수집해서 출석부를 작성합니다.
 
 ## config.ini
+* path: garden4-backend/attendance/config.ini
 ```
 ; config.ini
 [DEFAULT]
@@ -18,11 +19,17 @@ PORT = 27017
 USERS = junho85,user2,user3
 ```
 
-## collect_slack_messages.py
-* slack_messages 를 가져와서 db 에 넣습니다.
-
-## generate_attendance_csv.py
-* slack_messages 의 데이터를 읽어서 출석부를 csv 를 생성합니다. 이 값을 스프레드시트에 붙여 넣어서 사용합니다.
+## API
+* /attendance/user/<user> - user 의 출석 데이터를 불러옵니다.
+  * e.g. /attendance/user/junho85 - junho85 의 출석 데이터를 불러옵니다.
+* /attendance/collect/ - slack_messages 를 가져와서 db 에 넣습니다.
+  * 구 collect_slack_messages.py
+  * TODO 날짜 파라미터 받을 수 있도록
+* /attendance/csv/ - 출석부 csv 만들기
+  * 구 generate_attendance_csv.py
+  * slack_messages 의 데이터를 읽어서 출석부를 csv 를 생성합니다.
+  * 이 값을 스프레드시트에 붙여 넣어서 사용합니다.
+  * TODO API 결과로 가져올 수 있도록
 
 ## python modules
 ```

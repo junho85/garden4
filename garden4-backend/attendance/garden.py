@@ -2,14 +2,16 @@ import configparser
 from datetime import date, timedelta, datetime
 import slack
 import pymongo
-import json
 import pprint
+import os
 
 
 class Garden:
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(BASE_DIR, 'config.ini')
+        config.read(path)
 
         slack_api_token = config['DEFAULT']['SLACK_API_TOKEN']
         self.slack_client = slack.WebClient(token=slack_api_token)
@@ -22,6 +24,9 @@ class Garden:
 
         # mongodb collections
         self.mongo_collection_slack_message = "slack_messages"
+
+        # users list ['junho85', 'user2', 'user3']
+        self.users = config['GITHUB']['USERS'].split(',')
 
     def connect_mongo(self):
         return pymongo.MongoClient("mongodb://%s:%s" % (self.mongo_host, self.mongo_port))
@@ -114,3 +119,39 @@ class Garden:
 
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
         mongo_collection.remove()
+
+    def generate_attendance_csv(self):
+        attend_dict = {}
+
+        for user in self.users:
+            attends = self.find_attend_by_user(user)
+            attend_dict[user] = attends
+
+        result = {}
+
+        selected_date = datetime(2019, 10, 24).date()
+        print("=======")
+        for days in range(10):
+            # print dates
+            print(selected_date, end=',')
+
+            # make users - dates - first_ts
+            for user in attend_dict:
+                if user not in result:
+                    result[user] = {}
+
+                result[user][selected_date] = ""
+
+                if selected_date in attend_dict[user]:
+                    result[user][selected_date] = attend_dict[user][selected_date][0]["ts"]
+
+            selected_date = selected_date + timedelta(days=1)
+
+        print("")
+        print("=======")
+
+        # print result csv
+        for (user, dates) in result.items():
+            for (date, first_ts) in dates.items():
+                print(first_ts, end=',')
+            print("")
