@@ -31,7 +31,10 @@ python manage.py runserver 0:8000
   * e.g. /attendance/user/junho85 - junho85 의 출석 데이터를 불러옵니다.
 * /attendance/collect/ - slack_messages 를 가져와서 db 에 넣습니다.
   * 구 collect_slack_messages.py
-  * TODO 날짜 파라미터 받을 수 있도록
+  * params
+    * start yyyy-mm-dd
+    * end yyyy-mm-dd
+  * e.g. http://localhost:8000/attendance/collect/?start=2019-10-29&end=2019-11-01
 * /attendance/csv/ - 출석부 csv 만들기
   * 구 generate_attendance_csv.py
   * slack_messages 의 데이터를 읽어서 출석부를 csv 를 생성합니다.
