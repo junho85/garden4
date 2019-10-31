@@ -88,11 +88,11 @@ class Garden:
 
     # github 봇으로 모은 slack message 들을 slack_messages collection 에 저장
     def collect_slack_messages(self, oldest, latest):
-        print(oldest)
-        print(datetime.fromtimestamp(oldest))
-        print(latest)
-        print(datetime.fromtimestamp(latest))
-        print(self.channel_id)
+        # print(oldest)
+        # print(datetime.fromtimestamp(oldest))
+        # print(latest)
+        # print(datetime.fromtimestamp(latest))
+        # print(self.channel_id)
 
         response = self.slack_client.channels_history(
             channel=self.channel_id,
@@ -108,7 +108,7 @@ class Garden:
 
         for message in response["messages"]:
             message["ts"] = datetime.fromtimestamp(float(message["ts"]))
-            pprint.pprint(message)
+            # pprint.pprint(message)
 
             try:
                 mongo_collection.insert_one(message)

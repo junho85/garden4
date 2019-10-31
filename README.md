@@ -20,9 +20,13 @@ USERS = junho85,user2,user3
 ```
 
 ## WEB
+```
+python manage.py runserver 0:8000 
+```
 * http://localhost:8000/attendance/
 
 ## API
+* /attendance/users/ - 참석자 리스트를 불러옵니다.
 * /attendance/user/<user> - user 의 출석 데이터를 불러옵니다.
   * e.g. /attendance/user/junho85 - junho85 의 출석 데이터를 불러옵니다.
 * /attendance/collect/ - slack_messages 를 가져와서 db 에 넣습니다.

@@ -7,9 +7,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
     <script>
         $(document).ready(function () {
             console.log("ready!");
+
             get_users();
             get_attendance();
         });
@@ -38,7 +40,8 @@
             });
         }
         function get_attendance() {
-            let date = "20191028";
+            // let date = "20191028";
+            let date = $("#date").val();
 
             $.ajax({
                 method: "GET",
@@ -47,7 +50,7 @@
                 data: {}
             }).done(function (data) {
                 // console.log(data);
-                let html = `<table>
+                let html = `<table class="table">
 <thead>
 <th>user</th>
 <th>first_ts</th>
@@ -55,10 +58,14 @@
 <tbody>
 `;
                 $.each(data, function(index, row) {
+                    let first_ts = "";
+                    if (row.first_ts) {
+                        first_ts = moment(new Date(row.first_ts)).format("YYYY-MM-DD HH:mm:ss")
+                    }
                     html += `<tr>
-<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>
-<td>${row.first_ts || ""}</td>
-</tr>`;
+<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>`;
+                    html += `<td>${first_ts}</td>`;
+                    html += `</tr>`;
                 });
 
                 html += "</tbody></table>";
@@ -89,6 +96,10 @@
 
 <main role="main" class="flex-shrink-0">
     <div class="container">
+        <div>
+            <input id="date" type="text" placeholder="YYYYMMDD" value="20191029" />
+            <button onclick="get_attendance()">조회</button>
+        </div>
         <div id="attendance"></div>
         <div id="users"></div>
     </div>

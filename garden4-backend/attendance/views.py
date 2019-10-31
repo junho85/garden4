@@ -32,8 +32,8 @@ def user(request, user):
 
 
 def collect(request):
-    oldest = datetime(2019, 10, 27).timestamp()
-    latest = datetime(2019, 10, 29).timestamp()
+    oldest = datetime.strptime(request.GET.get('start'), "%Y-%m-%d").timestamp()
+    latest = datetime.strptime(request.GET.get('end'), "%Y-%m-%d").timestamp()
 
     garden = Garden()
     garden.collect_slack_messages(oldest, latest)
@@ -52,5 +52,5 @@ def csv(request):
 def get(request, date):
     garden = Garden()
     result = garden.get_attendance(datetime.strptime(date, "%Y%m%d").date())
-    pprint.pprint(result)
+    # pprint.pprint(result)
     return JsonResponse(result, safe=False)
