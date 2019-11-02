@@ -28,6 +28,8 @@ class Garden:
         # users list ['junho85', 'user2', 'user3']
         self.users = config['GITHUB']['USERS'].split(',')
 
+        self.start_date = datetime(2019, 10, 1).date() # 2019-10-01
+
     def connect_mongo(self):
         return pymongo.MongoClient("mongodb://%s:%s" % (self.mongo_host, self.mongo_port))
 
@@ -52,7 +54,7 @@ class Garden:
 
     # 특정 유저의 전체 출석부를 생성함
     # TODO 출석부를 DB에 넣고 마지막 생성된 출석부 이후의 데이터로 추가 출석부 만들도록 하자
-    def find_attend_by_user(self, user):
+    def find_attendance_by_user(self, user):
         conn = self.connect_mongo()
 
         db = conn.get_database(self.mongo_database)
@@ -60,7 +62,7 @@ class Garden:
 
         result = {}
 
-        start_date = datetime(2019, 10, 1).date()
+        start_date = self.start_date
         for message in mongo_collection.find({"attachments.author_name": user}).sort("ts", 1):
             # make attend
             commits = []
@@ -125,18 +127,20 @@ class Garden:
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
         mongo_collection.remove()
 
-    # 특정일의 출석 데이터 불러오기
-    # TODO DB 에 넣고 DB 정보 가져 오도록 변경. 지금은 모든 유저의 모든 출석 데이터 가져온 다음 거기서 특정일의 출석 데이터를 뽑아내고 있음.
+    """
+    특정일의 출석 데이터 불러오기
+    @param selected_date
+    """
     def get_attendance(self, selected_date):
         attend_dict = {}
 
         # get all users attendance info
         for user in self.users:
-            attends = self.find_attend_by_user(user)
+            attends = self.find_attendance_by_user(user)
             attend_dict[user] = attends
 
         result = {}
-        result2 = []
+        result_attendance = []
 
         # make users - dates - first_ts
         for user in attend_dict:
@@ -148,15 +152,15 @@ class Garden:
             if selected_date in attend_dict[user]:
                 result[user][selected_date] = attend_dict[user][selected_date][0]["ts"]
 
-            result2.append({"user": user, "first_ts": result[user][selected_date]})
+            result_attendance.append({"user": user, "first_ts": result[user][selected_date]})
 
-        return result2
+        return result_attendance
 
     def generate_attendance_csv(self):
         attend_dict = {}
 
         for user in self.users:
-            attends = self.find_attend_by_user(user)
+            attends = self.find_attendance_by_user(user)
             attend_dict[user] = attends
 
         result = {}

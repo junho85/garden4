@@ -6,7 +6,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('users/', views.users, name='users'),
     path('user/<user>/', views.user, name='user'),
-    path('collect/', views.collect, name='collect'),
+    path('collect/', views.collect, name='collect'), # slack_messages 수집
     path('csv/', views.csv, name='csv'),
-    path('get/<date>', views.get, name='get'),
+    path('get/<date>', views.get, name='get'), # 특정일의 출석부 조회. 날짜기준
+    path('gets', views.gets, name='get'), # 전체 출석부 조회. 리스트. 유저별.
 ]
