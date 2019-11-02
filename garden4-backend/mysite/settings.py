@@ -25,7 +25,7 @@ SECRET_KEY = ')dhyx_u-p#2=7skn%yxl6vs$+ew5%=b5wa7$k70%-rx@_jflnz'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'labs.junho85.pe.kr']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'labs.junho85.pe.kr', 'junho85.vps.phps.kr']
 
 
 # Application definition
