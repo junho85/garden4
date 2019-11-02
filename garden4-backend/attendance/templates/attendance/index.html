@@ -13,6 +13,8 @@
             console.log("ready!");
 
             get_users();
+
+            $("#date").val(moment(new Date(new Date().setDate(new Date().getDate()-1))).format("YYYYMMDD"));
             get_attendance();
         });
 
@@ -40,7 +42,6 @@
             });
         }
         function get_attendance() {
-            // let date = "20191028";
             let date = $("#date").val();
 
             $.ajax({
@@ -50,7 +51,7 @@
                 data: {}
             }).done(function (data) {
                 // console.log(data);
-                let html = `<table class="table">
+                let html = `<table class="table table-sm">
 <thead>
 <th>user</th>
 <th>first_ts</th>
@@ -96,12 +97,17 @@
 
 <main role="main" class="flex-shrink-0">
     <div class="container">
+        <h2>정원사들</h2>
+        <div id="users"></div>
+        <br>
+        <h2>출석부</h2>
         <div>
-            <input id="date" type="text" placeholder="YYYYMMDD" value="20191029" />
-            <button onclick="get_attendance()">조회</button>
+            <form class="form-inline" onsubmit="return false;">
+                <input id="date" type="text" class="form-control" placeholder="YYYYMMDD" value="20191029" />
+                <button class="btn btn-primary" onclick="get_attendance()">조회</button>
+            </form>
         </div>
         <div id="attendance"></div>
-        <div id="users"></div>
     </div>
 </main>
 
