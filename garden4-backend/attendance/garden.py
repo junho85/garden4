@@ -48,7 +48,7 @@ class Garden:
         db = conn.get_database(self.mongo_database)
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
 
-        for message in mongo_collection.find({"ts": {"$gte": datetime.fromtimestamp(oldest), "$lt": datetime.fromtimestamp(latest)}}):
+        for message in mongo_collection.find({"ts_for_db": {"$gte": datetime.fromtimestamp(oldest), "$lt": datetime.fromtimestamp(latest)}}):
             print(message["ts"])
             print(message)
 
@@ -68,12 +68,13 @@ class Garden:
             commits = []
             for attachment in message["attachments"]:
                 commits.append(attachment["text"])
-            attend = {"ts": message["ts"], "message": commits}
+            ts_datetime = datetime.fromtimestamp(float(message["ts"]))
+            attend = {"ts": ts_datetime, "message": commits}
 
             # current date and date before day1
-            date = message["ts"].date()
+            date = ts_datetime.date()
             date_before_day1 = date - timedelta(days=1)
-            hour = message["ts"].hour
+            hour = ts_datetime.hour
 
             if date_before_day1 >= start_date and hour < 4 and date_before_day1 not in result:
                 # check before day1. if exists, before day1 is already done.
@@ -109,12 +110,13 @@ class Garden:
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
 
         for message in response["messages"]:
-            message["ts"] = datetime.fromtimestamp(float(message["ts"]))
+            message["ts_for_db"] = datetime.fromtimestamp(float(message["ts"]))
             # pprint.pprint(message)
 
             try:
                 mongo_collection.insert_one(message)
-            except pymongo.errors.DuplicateKeyError:
+            except pymongo.errors.DuplicateKeyError as err:
+                print(err)
                 continue
 
     def remove_all_slack_messages(self):
