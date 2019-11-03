@@ -102,7 +102,7 @@ class Garden:
             channel=self.channel_id,
             latest=str(latest),
             oldest=str(oldest),
-            count=10000
+            count=1000
         )
 
         conn = self.connect_mongo()
