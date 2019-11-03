@@ -120,7 +120,7 @@
 <tr>
 <th>No</th>
 <th>user</th>
-<th>출석율</th>
+<th>출석률</th>
 <th>순위</th>
 `;
                 // 날짜 헤더
@@ -150,12 +150,12 @@
                     html += `</tr>`;
                 });
 
-                // 날짜별 출석율
+                // 날짜별 출석률
                 let daily_rate = [];
                 let daily_rate_html = `<td></td>
 <td></td>
 <td></td>`; // 빈칸들
-                daily_rate_html += "<td>출석율</td>";
+                daily_rate_html += "<td>출석률</td>";
                 $.each(formatted_dates, function(idx, formatted_date) {
                     let rate = (daily_count[formatted_date] / data.length) * 100;
                     daily_rate_html += `<td>${Math.round(rate)}%</td>`;
@@ -176,7 +176,7 @@
 <thead>
 <th>순위</th>
 <th>user</th>
-<th>출석율</th>
+<th>출석률</th>
 </thead>
 <tbody>`;
                 $.each(data, function(idx, item) {
@@ -192,26 +192,26 @@
 
                 $("#rank").html(rank_html);
 
-                // 출석율 그래프
+                // 출석률 그래프
                 google.charts.load('current', {'packages': ['corechart']});
 
                 google.charts.setOnLoadCallback(drawChart);
 
                 function drawChart() {
-                    {#let arr = [['Dates', '출석율']];#}
+                    {#let arr = [['Dates', '출석률']];#}
                     {#arr = arr.concat(daily_rate);#}
                     {#console.log(arr);#}
                     {#const data = google.visualization.arrayToDataTable(arr);#}
                     var chartData = new google.visualization.DataTable();
                     chartData.addColumn('string', 'Dates');
-                    chartData.addColumn('number', '출석율');
+                    chartData.addColumn('number', '출석률');
                     chartData.addColumn({type:'string', role:'annotation'});
                     chartData.addRows(daily_rate);
 
                     const options = {
-                        title: '정원사들 출석율',
+                        title: '정원사들 출석률',
                         hAxis: {title: 'Dates'},
-                        vAxis: {title: '출석율', maxValue: 100, minValue: 0},
+                        vAxis: {title: '출석률', maxValue: 100, minValue: 0},
                         legend: 'none',
                         width: "100%",
                         height: 400,
@@ -268,7 +268,7 @@
         <div id="attendance"></div>
         <h2>순위</h2>
         <div id="rank"></div>
-        <h2>출석율 그래프</h2>
+        <h2>출석률 그래프</h2>
         <div id="chart_div"></div>
         <h2>출석/미출석</h2>
         <div id="attend_noshow_div"></div>

@@ -189,6 +189,7 @@ class Garden:
 
         # print result csv
         for (user, dates) in result.items():
-            for first_ts in dates.values():
+            for (date, first_ts) in dates.items():
+                # print(date, first_ts)
                 print(first_ts, end=',')
             print("")
