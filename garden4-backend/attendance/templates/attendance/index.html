@@ -74,6 +74,8 @@
                 // data 에 rate, count 추가
                 let counts = [];
                 let daily_count = {};
+                let total_attend_count = 0;
+                let total_noshow_count = 0;
 
                 $.each(data, function(index, data_row) {
                     let count_by_user = 0;
@@ -84,6 +86,9 @@
                                 daily_count[formatted_date] = 0;
                             }
                             daily_count[formatted_date]++;
+                            total_attend_count++;
+                        } else {
+                            total_noshow_count++;
                         }
                     });
 
@@ -217,6 +222,12 @@
                     const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
                     chart.draw(chartData, options);
                 }
+
+                // 출석/미출석 카운트
+                let attend_noshow_html = "";
+                attend_noshow_html += `${total_attend_count}/${total_noshow_count}`;
+
+                $("#attend_noshow_div").html(attend_noshow_html);
             }).fail(function (data) {
                 console.log(data);
                 alert("출석부 실패");
@@ -259,6 +270,8 @@
         <div id="rank"></div>
         <h2>출석율 그래프</h2>
         <div id="chart_div"></div>
+        <h2>출석/미출석</h2>
+        <div id="attend_noshow_div"></div>
     </div>
 </main>
 
