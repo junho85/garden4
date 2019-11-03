@@ -68,7 +68,8 @@ class Garden:
             commits = []
             for attachment in message["attachments"]:
                 commits.append(attachment["text"])
-            ts_datetime = datetime.fromtimestamp(float(message["ts"]))
+            # ts_datetime = datetime.fromtimestamp(float(message["ts"]))
+            ts_datetime = message["ts_for_db"]
             attend = {"ts": ts_datetime, "message": commits}
 
             # current date and date before day1
@@ -101,7 +102,7 @@ class Garden:
             channel=self.channel_id,
             latest=str(latest),
             oldest=str(oldest),
-            count=1000
+            count=10000
         )
 
         conn = self.connect_mongo()
@@ -152,7 +153,7 @@ class Garden:
             result[user][selected_date] = None
 
             if selected_date in attend_dict[user]:
-                result[user][selected_date] = attend_dict[user][selected_date][0]["ts"]
+                result[user][selected_date] = attend_dict[user][selected_date][0]["ts_for_db"]
 
             result_attendance.append({"user": user, "first_ts": result[user][selected_date]})
 
