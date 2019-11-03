@@ -1,0 +1,18 @@
+/*@import url(https://fonts.googleapis.com/css?family=Open+Sans:700);*/
+.table-rank {
+    width: 300px;
+}
+.attendance-table {
+    font-size: 10px;
+    text-align: center;
+    /*{#table-layout: fixed;#}*/
+}
+.attendance_date {
+    /*{#transform: rotate(270deg);#}*/
+    /*{#word-wrap: break-word;#}*/
+    /*{#width: 30px;#}*/
+    /*{#text-align:center;#}*/
+    /*{#line-height:20px;#}*/
+    /*{#font-family: 'Open Sans', sans-serif;#}*/
+    /*{#writing-mode: vertical-lr;#}*/
+}
