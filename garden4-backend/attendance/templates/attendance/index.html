@@ -8,14 +8,31 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans:700);
+        .attendance-table {
+            {#table-layout: fixed;#}
+        }
+        .attendance_date {
+            {#transform: rotate(270deg);#}
+            {#word-wrap: break-word;#}
+            {#width: 30px;#}
+            {#text-align:center;#}
+            {#line-height:20px;#}
+            {#font-family: 'Open Sans', sans-serif;#}
+            {#writing-mode: vertical-lr;#}
+        }
+    </style>
     <script>
         $(document).ready(function () {
             console.log("ready!");
 
             get_users();
 
-            $("#date").val(moment(new Date(new Date().setDate(new Date().getDate()-1))).format("YYYYMMDD"));
-            get_attendance();
+            let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
+            $("#date").val(moment(yesterday).format("YYYYMMDD"));
+            {#get_attendance();#}
+            get_attendances();
         });
 
         function collect_attendance() {
@@ -41,6 +58,7 @@
                 $("#users").html(html);
             });
         }
+
         function get_attendance() {
             let date = $("#date").val();
 
@@ -63,8 +81,8 @@
                     if (row.first_ts) {
                         first_ts = moment(new Date(row.first_ts)).format("YYYY-MM-DD HH:mm:ss")
                     }
-                    html += `<tr>
-<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>`;
+                    html += `<tr>`;
+                    html += `<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>`;
                     html += `<td>${first_ts}</td>`;
                     html += `</tr>`;
                 });
@@ -76,12 +94,110 @@
                 alert("실패");
             });
         }
+
+        // 전체 출석부 조회
+        function get_attendances() {
+            $.ajax({
+                method: "GET",
+                url: "gets",
+                dataType: "JSON",
+                data: {}
+            }).done(function (data) {
+                // 출석부 날짜 범위 2019.10.01 ~ 어제
+                {#const now = new Date();#}
+                let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
+                let formatted_dates = [];
+                for (let d = new Date(2019, 10 - 1, 1); d <= yesterday; d.setDate(d.getDate() + 1)) {
+                    formatted_dates.push(moment(d).format("YYYY-MM-DD"));
+                }
+
+                let html = `<table id="attendance-table" class="table table-sm attendance-table">
+<thead>
+<tr>
+<th style="width:100px">No</th>
+<th style="width:100px">user</th>
+<th style="width:100px">출석율</th>
+<th style="width:100px">순위</th>
+`;
+                // 날짜 헤더
+                $.each(formatted_dates, function(idx, formatted_date) {
+                    html += `<th class="attendance_date">${formatted_date}</th>`;
+                });
+                html += `</tr></thead>
+<tbody>
+`;
+
+                let counts = [];
+                let daily_count = {};
+                $.each(data, function(index, row) {
+                    let attendances_cell_html = "";
+                    let count_by_user = 0;
+                    $.each(formatted_dates, function (idx, formatted_date) {
+                        if (formatted_date in row.attendances) {
+                            attendances_cell_html += `<td title="${row.attendances[formatted_date]}">O</td>`;
+                            count_by_user++;
+                            if (!(formatted_date in daily_count)) {
+                                daily_count[formatted_date] = 0;
+                            }
+                            daily_count[formatted_date]++;
+                        } else {
+                            attendances_cell_html += `<td>X</td>`;
+                        }
+                    });
+
+                    counts.push(count_by_user);
+
+                    // 출석율
+                    let rate = (count_by_user / formatted_dates.length)*100;
+
+                    html += `<tr data-count="${count_by_user}">`;
+                    html += `<td>${index + 1}</td>`;
+                    html += `<td><a href="https://github.com/${row.user}" target="_blank">${row.user}</a></td>`;
+                    html += `<td>${Math.round(rate)}%</td>`;
+                    html += `<td class="rank"></td>`;
+                    html += attendances_cell_html;
+                    html += `</tr>`;
+                });
+
+                // 날짜별 출석율
+                let daily_rate_html = "<td></td><td></td><td></td><td>출석율</td>";
+                $.each(formatted_dates, function(idx, formatted_date) {
+                    let rate = Math.round((daily_count[formatted_date] / data.length) * 100);
+                    {#console.log(formatted_date, daily_count[formatted_date], rate);#}
+                    daily_rate_html += `<td>${rate}%</td>`;
+                });
+
+                html += `<tr>${daily_rate_html}</tr>`;
+
+                html += "</tbody></table>";
+                $("#attendance").html(html);
+
+                // 순위 계산
+                function rank(value, arr) {
+                    const sorted = arr.slice().sort(function (a, b) {
+                        return b - a
+                    });
+                    const rank = sorted.indexOf(value);
+                    if (rank > -1) return rank + 1;
+                    return null;
+                }
+
+                $.each($("#attendance-table tr"), function(idx_row, row) {
+                    let user_rank = rank($(row).data("count"), counts);
+                    $(row).find(".rank").text(user_rank);
+                });
+            }).fail(function (data) {
+                console.log(data);
+                alert("실패");
+            });
+        }
+
     </script>
 </head>
 <body>
 <header>
     <div class="navbar navbar-dark bg-dark shadow-sm">
-        <div class="container d-flex justify-content-between">
+        <div class="container-fluid d-flex justify-content-between">
             <a href="#" class="navbar-brand d-flex align-items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
                      stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true" class="mr-2"
@@ -96,16 +212,16 @@
 </header>
 
 <main role="main" class="flex-shrink-0">
-    <div class="container">
+    <div class="container-fluid">
         <h2>정원사들</h2>
         <div id="users"></div>
         <br>
         <h2>출석부</h2>
         <div>
-            <form class="form-inline" onsubmit="return false;">
-                <input id="date" type="text" class="form-control" placeholder="YYYYMMDD" value="20191029" />
-                <button class="btn btn-primary" onclick="get_attendance()">조회</button>
-            </form>
+{#            <form class="form-inline" onsubmit="return false;">#}
+{#                <input id="date" type="text" class="form-control" placeholder="YYYYMMDD" value="20191029" />#}
+{#                <button class="btn btn-primary" onclick="get_attendance()">조회</button>#}
+{#            </form>#}
         </div>
         <div id="attendance"></div>
     </div>
