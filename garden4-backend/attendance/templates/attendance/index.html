@@ -119,77 +119,34 @@
                 // data {user: user, attendances: }
 
                 // 출석부 날짜 범위 2019.10.01 ~ 어제
-                {#const now = new Date();#}
                 let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
                 let formatted_dates = [];
                 for (let d = new Date(2019, 10 - 1, 1); d <= yesterday; d.setDate(d.getDate() + 1)) {
                     formatted_dates.push(moment(d).format("YYYY-MM-DD"));
                 }
 
-                let html = `<table id="attendance-table" class="table table-sm attendance-table">
-<thead>
-<tr>
-<th style="width:100px">No</th>
-<th style="width:100px">user</th>
-<th style="width:100px">출석율</th>
-<th style="width:100px">순위</th>
-`;
-                // 날짜 헤더
-                $.each(formatted_dates, function(idx, formatted_date) {
-                    html += `<th class="attendance_date">${formatted_date}</th>`;
-                });
-                html += `</tr></thead>
-<tbody>
-`;
-
+                // data 에 rate, count 추가
                 let counts = [];
                 let daily_count = {};
+
                 $.each(data, function(index, data_row) {
-                    let attendances_cell_html = "";
                     let count_by_user = 0;
                     $.each(formatted_dates, function (idx, formatted_date) {
                         if (formatted_date in data_row.attendances) {
-                            attendances_cell_html += `<td title="${data_row.attendances[formatted_date]}">O</td>`;
                             count_by_user++;
                             if (!(formatted_date in daily_count)) {
                                 daily_count[formatted_date] = 0;
                             }
                             daily_count[formatted_date]++;
-                        } else {
-                            attendances_cell_html += `<td>X</td>`;
                         }
                     });
 
                     counts.push(count_by_user);
 
-                    // 출석율
-                    let rate = (count_by_user / formatted_dates.length)*100;
-
                     // data 에 정보 추가
-                    data_row["rate"] = rate;
+                    data_row["rate"] = (count_by_user / formatted_dates.length) * 100;
                     data_row["count"] = count_by_user;
-
-                    html += `<tr data-count="${count_by_user}" data-user="${data_row.user}" class="user">`;
-                    html += `<td>${index + 1}</td>`;
-                    html += `<td><a href="https://github.com/${data_row.user}" target="_blank">${data_row.user}</a></td>`;
-                    html += `<td>${Math.round(rate)}%</td>`;
-                    html += `<td class="rank"></td>`;
-                    html += attendances_cell_html;
-                    html += `</tr>`;
                 });
-
-                // 날짜별 출석율
-                let daily_rate_html = "<td></td><td></td><td></td><td>출석율</td>";
-                $.each(formatted_dates, function(idx, formatted_date) {
-                    let rate = Math.round((daily_count[formatted_date] / data.length) * 100);
-                    {#console.log(formatted_date, daily_count[formatted_date], rate);#}
-                    daily_rate_html += `<td>${rate}%</td>`;
-                });
-
-                html += `<tr>${daily_rate_html}</tr>`;
-
-                html += "</tbody></table>";
-                $("#attendance").html(html);
 
                 // 순위 계산
                 function rank(value, arr) {
@@ -201,23 +158,66 @@
                     return null;
                 }
 
+                // data 에 rank 추가
                 $.each(data, function(index, data_row) {
-                    let user_rank = rank(data_row.count, counts);
-                    data_row["rank"] = user_rank;
+                    data_row["rank"] = rank(data_row.count, counts);
                 });
 
-                $.each($("#attendance-table tbody tr.user"), function(idx_row, row) {
-                    // 순위 컬럼
-                    let count = $(row).data("count");
-                    let user_rank = rank(count, counts);
-                    $(row).find(".rank").text(user_rank);
+                // table 그리기
+                let html = `<table id="attendance-table" class="table table-sm attendance-table">
+<thead>
+<tr>
+<th>No</th>
+<th>user</th>
+<th>출석율</th>
+<th>순위</th>
+`;
+                // 날짜 헤더
+                $.each(formatted_dates, function(idx, formatted_date) {
+                    html += `<th class="attendance_date">${formatted_date}</th>`;
+                });
+                html += `</tr></thead>
+<tbody>
+`;
+
+                $.each(data, function(index, data_row) {
+                    let attendances_cell_html = "";
+                    $.each(formatted_dates, function (idx, formatted_date) {
+                        if (formatted_date in data_row.attendances) {
+                            attendances_cell_html += `<td title="${data_row.attendances[formatted_date]}">O</td>`;
+                        } else {
+                            attendances_cell_html += `<td>X</td>`;
+                        }
+                    });
+
+                    html += `<tr data-count="${data_row.count}" data-user="${data_row.user}" class="user">`;
+                    html += `<td>${index + 1}</td>`;
+                    html += `<td><a href="https://github.com/${data_row.user}" target="_blank">${data_row.user}</a></td>`;
+                    html += `<td>${Math.round(data_row.rate)}%</td>`;
+                    html += `<td class="rank">${data_row.rank}</td>`;
+                    html += attendances_cell_html;
+                    html += `</tr>`;
                 });
 
+                // 날짜별 출석율
+                let daily_rate_html = `<td></td>
+<td></td>
+<td></td>`; // 빈칸들
+                daily_rate_html += "<td>출석율</td>";
+                $.each(formatted_dates, function(idx, formatted_date) {
+                    let rate = Math.round((daily_count[formatted_date] / data.length) * 100);
+                    daily_rate_html += `<td>${rate}%</td>`;
+                });
+
+                html += `<tr>${daily_rate_html}</tr>`;
+                html += "</tbody></table>";
+                $("#attendance").html(html);
+
+                // 순위별 표시
                 data.sort(function(a, b) {
                     return a.rank - b.rank;
                 });
 
-                // 순위별 표시
                 let rank_html = `<table class="table table-sm table-rank">
 <thead>
 <th>순위</th>
@@ -229,7 +229,7 @@
                     let avatar_img_url = getAvatarImgUrl(item.user);
                     rank_html += `<tr>
 <td>${item.rank}</td>
-<td><img src="${avatar_img_url}" width="80"/></td>
+<td><img src="${avatar_img_url}" width="80" style="vertical-align:top"/>${item.user}</td>
 <td>${Math.round(item.rate)}</td>
 </tr>`;
                 });
