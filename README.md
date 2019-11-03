@@ -119,3 +119,14 @@ db.slack_messages.createIndex({ts:1}, {unique: true})
     * commits
 * slack 메시지 올라오지 않은 케이스를 위해 수작업으로 넣어 준다면 type 이 필요할듯.
 
+## collect cron
+* 어제부터 오늘까지 slack_message 수집
+* cron 에 등록해두면 무난함
+```
+0 5 * * * /usr/bin/python3 /home/junho85/web/garden4/garden4-backend/attendance/cli_collect.py
+```
+
+* cron 로그 확인
+```
+sudo tail -n 100 /var/log/syslog -f
+```
