@@ -122,8 +122,15 @@ db.slack_messages.createIndex({ts:1}, {unique: true})
 ## collect cron
 * 어제부터 오늘까지 slack_message 수집
 * cron 에 등록해두면 무난함
+
+e.g. ubuntu server
 ```
-0 5 * * * /usr/bin/python3 /home/junho85/web/garden4/garden4-backend/attendance/cli_collect.py
+0 5 * * * /home/junho85/web/garden4/garden4-backend/env/bin/python /home/junho85/web/garden4/garden4-backend/attendance/cli_collect.py
+```
+
+e.g. mac osx
+```
+0 5 * * * /Users/junho85/PycharmProjects/garden4/venv/bin/python /Users/junho85/PycharmProjects/garden4/garden4-backend/attendance/cli_collect.py
 ```
 
 * cron 로그 확인
