@@ -119,7 +119,8 @@ db.slack_messages.createIndex({ts:1}, {unique: true})
     * commits
 * slack 메시지 올라오지 않은 케이스를 위해 수작업으로 넣어 준다면 type 이 필요할듯.
 
-## collect cron
+## cron
+### collect attendance
 * 어제부터 오늘까지 slack_message 수집
 * cron 에 등록해두면 무난함
 

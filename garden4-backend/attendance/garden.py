@@ -4,7 +4,7 @@ import slack
 import pymongo
 import pprint
 import os
-
+import yaml
 
 class Garden:
     def __init__(self):
@@ -28,6 +28,12 @@ class Garden:
         # users list ['junho85', 'user2', 'user3']
         self.users = config['GITHUB']['USERS'].split(',')
 
+        # users_with_slackname
+        path = os.path.join(BASE_DIR, 'users.yaml')
+
+        with open(path) as file:
+            self.users_with_slackname = yaml.full_load(file)
+
         self.start_date = datetime(2019, 10, 1).date() # 2019-10-01
 
     def connect_mongo(self):
@@ -35,6 +41,12 @@ class Garden:
 
     def get_member(self):
         return self.users
+
+    '''
+    github userid - slack username
+    '''
+    def get_members(self):
+        return self.users_with_slackname
 
     def find_attend(self, oldest, latest):
         print("find_attend")
@@ -153,7 +165,7 @@ class Garden:
             result[user][selected_date] = None
 
             if selected_date in attend_dict[user]:
-                result[user][selected_date] = attend_dict[user][selected_date][0]["ts_for_db"]
+                result[user][selected_date] = attend_dict[user][selected_date][0]["ts"]
 
             result_attendance.append({"user": user, "first_ts": result[user][selected_date]})
 
@@ -196,3 +208,28 @@ class Garden:
                 # print(date, first_ts)
                 print(first_ts, end=',')
             print("")
+
+    def send_no_show_message(self):
+        members = self.get_members()
+        today = datetime.today().date()
+
+        message = "미출석자 알람 테스트 "
+        results = self.get_attendance(today)
+        for result in results:
+            if result["first_ts"] is None:
+                message += "@%s " % members[result["user"]]["slack"]
+
+        self.slack_client.chat_postMessage(
+            channel='#junekim', # temp
+            text=message,
+            link_names=1
+        )
+
+    def test_slack(self):
+        # self.slack_client.chat_postMessage(
+        #     channel='#junekim', # temp
+        #     text='@junho85 test',
+        #     link_names=1
+        # )
+        response = self.slack_client.users_list()
+        print(response)
