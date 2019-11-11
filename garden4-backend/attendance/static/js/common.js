@@ -12,7 +12,7 @@ function get_attendance() {
         data: {}
     }).done(function (data) {
         // console.log(data);
-        let html = `<table class="table table-sm table-striped">
+        let html = `<table class="table table-sm table-striped table-hover">
 <thead>
 <th>user</th>
 <th>first_ts</th>
