@@ -9,21 +9,22 @@
 
         get_users();
 
-        let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
-        $("#date").val(moment(yesterday).format("YYYYMMDD"));
+        {#let yesterday = new Date(new Date().setDate(new Date().getDate()-1));#}
+        {#$("#date").val(moment(yesterday).format("YYYYMMDD"));#}
         get_attendances();
     });
 
-    function collect_attendance() {
-        $.ajax({
-            method: "GET",
-            url: "collect/",
-            dataType: "JSON",
-            data: {}
-        }).done(function (data) {
-        })
+    // 순위 계산
+    function get_rank(value, arr) {
+        const sorted = arr.slice().sort(function (a, b) {
+            return b - a
+        });
+        const rank = sorted.indexOf(value);
+        if (rank > -1) return rank + 1;
+        return null;
     }
 
+    // 유저 리스트 조회
     function get_users() {
         $.ajax({
             method: "GET",
@@ -40,6 +41,75 @@
             });
             $("#users").html(html);
         });
+    }
+
+    // 순위 그리기
+    function draw_rank(data) {
+        data.sort(function (a, b) {
+            return a.rank - b.rank;
+        });
+
+        let rank_html = `<table class="table table-sm table-rank">
+<tbody>`;
+        $.each(data, function (idx, item) {
+
+            let avatar_img_url = getAvatarImgUrl(item.user);
+            let num_per_line = 10;
+            if (idx % num_per_line === 0)
+                rank_html += `<tr>`;
+
+            rank_html += `<td>${item.rank}등<br>${Math.round(item.rate)}%</td>`;
+            rank_html += `<td><img src="${avatar_img_url}" width="80" style="vertical-align:top"/>${item.user}</td>`;
+
+            if (idx % num_per_line === num_per_line - 1)
+                rank_html += `</tr>`;
+        });
+
+        rank_html += `</tbody></table>`;
+
+        $("#rank").html(rank_html);
+    }
+
+    // 출석/미출석 그리기
+    function draw_attend_noshow(total_attend_count, total_noshow_count) {
+        let total_attandance_rate = total_attend_count / (total_attend_count + total_noshow_count) * 100;
+        let attend_noshow_html = "";
+        attend_noshow_html += `${total_attend_count}/${total_noshow_count}<br>`;
+        attend_noshow_html += `전체 출석률: ${Math.round(total_attandance_rate)}%`;
+
+        $("#attend_noshow_div").html(attend_noshow_html);
+    }
+
+    // 오늘의 출석부
+    function draw_today_attendance(today_attendances) {
+        let today_attendance_html = `<table class="table table-sm table-rank"><tbody>`;
+
+        let count_attendance = 0;
+        let num_per_line = 10;
+        $.each(today_attendances, function(idx, row) {
+            if (idx % num_per_line === 0)
+                today_attendance_html += `<tr>`;
+
+            let formatted_datetime = "";
+            if (row.attend !== null) {
+                let avatar_img_url = getAvatarImgUrl(row.name);
+                formatted_datetime = moment(row.attend).format("YYYY-MM-DD HH:mm:ss");
+                count_attendance++;
+                today_attendance_html += `<td>${row.name}<br><img src="${avatar_img_url}" width="60"><br>출석성공!</td>`;
+            } else {
+                today_attendance_html += `<td>${row.name}<br>힘내세요!</td>`;
+            }
+
+            if (idx % num_per_line === num_per_line - 1)
+                today_attendance_html += `</tr>`;
+
+        });
+
+        today_attendance_html += `</tbody></table>`;
+        let rate = Math.round(count_attendance/today_attendances.length*100);
+        today_attendance_html += `오늘의 출석률: ${rate}%`;
+
+        $("#today_attendance").html(today_attendance_html);
     }
 
     // 전체 출석부 조회
@@ -59,11 +129,14 @@
                 formatted_dates.push(moment(d).format("YYYY-MM-DD"));
             }
 
+            let formatted_today = moment().format("YYYY-MM-DD");
+
             // data 에 rate, count 추가
             let counts = [];
             let daily_count = {};
             let total_attend_count = 0;
             let total_noshow_count = 0;
+            let today_attendances = []; // 오늘 출석 데이터
 
             $.each(data, function(index, data_row) {
                 let count_by_user = 0;
@@ -85,21 +158,18 @@
                 // data 에 정보 추가
                 data_row["rate"] = (count_by_user / formatted_dates.length) * 100;
                 data_row["count"] = count_by_user;
-            });
 
-            // 순위 계산
-            function rank(value, arr) {
-                const sorted = arr.slice().sort(function (a, b) {
-                    return b - a
-                });
-                const rank = sorted.indexOf(value);
-                if (rank > -1) return rank + 1;
-                return null;
-            }
+                // 오늘 출석 데이터
+                let today_attendance = {name: data_row.user, attend: null};
+                if (formatted_today in data_row.attendances) {
+                    today_attendance.attend = data_row.attendances[formatted_today];
+                }
+                today_attendances.push(today_attendance)
+            });
 
             // data 에 rank 추가
             $.each(data, function(index, data_row) {
-                data_row["rank"] = rank(data_row.count, counts);
+                data_row["rank"] = get_rank(data_row.count, counts);
             });
 
             // table 그리기
@@ -143,6 +213,7 @@
             let daily_rate_html = `<td></td>
 <td></td>
 <td></td>`; // 빈칸들
+
             daily_rate_html += "<td>출석률</td>";
             $.each(formatted_dates, function(idx, formatted_date) {
                 let rate = (daily_count[formatted_date] / data.length) * 100;
@@ -156,41 +227,14 @@
             $("#attendance").html(html);
 
             // 순위별 표시
-            data.sort(function(a, b) {
-                return a.rank - b.rank;
-            });
-
-            let rank_html = `<table class="table table-sm table-rank">
-<thead>
-<th>순위</th>
-<th>user</th>
-<th>출석률</th>
-</thead>
-<tbody>`;
-            $.each(data, function(idx, item) {
-                let avatar_img_url = getAvatarImgUrl(item.user);
-                rank_html += `<tr>
-<td>${item.rank}</td>
-<td><img src="${avatar_img_url}" width="80" style="vertical-align:top"/>${item.user}</td>
-<td>${Math.round(item.rate)}%</td>
-</tr>`;
-            });
-
-            rank_html += `</tbody></table>`;
-
-            $("#rank").html(rank_html);
+            draw_rank(data);
 
             // 출석률 그래프
             google.charts.load('current', {'packages': ['corechart']});
-
             google.charts.setOnLoadCallback(drawChart);
 
             function drawChart() {
-                {#let arr = [['Dates', '출석률']];#}
-                {#arr = arr.concat(daily_rate);#}
-                {#console.log(arr);#}
-                {#const data = google.visualization.arrayToDataTable(arr);#}
-                var chartData = new google.visualization.DataTable();
+                const chartData = new google.visualization.DataTable();
                 chartData.addColumn('string', 'Dates');
                 chartData.addColumn('number', '출석률');
                 chartData.addColumn({type:'string', role:'annotation'});
@@ -212,10 +256,10 @@
             }
 
             // 출석/미출석 카운트
-            let attend_noshow_html = "";
-            attend_noshow_html += `${total_attend_count}/${total_noshow_count}`;
+            draw_attend_noshow(total_attend_count, total_noshow_count);
 
-            $("#attend_noshow_div").html(attend_noshow_html);
+            // 오늘 출석 현황
+            draw_today_attendance(today_attendances);
         }).fail(function (data) {
             console.log(data);
             alert("출석부 실패");
@@ -224,22 +268,22 @@
 
 </script>
 
-<h2>정원사들</h2>
+<h2 id="users_title">정원사들</h2>
 <div id="users"></div>
 <br>
-<h2>출석부</h2>
-<div>
-{#            <form class="form-inline" onsubmit="return false;">#}
-{#                <input id="date" type="text" class="form-control" placeholder="YYYYMMDD" value="20191029" />#}
-{#                <button class="btn btn-primary" onclick="get_attendance()">조회</button>#}
-{#            </form>#}
-</div>
+<h2 id="today_attendance_title">오늘의 출석부</h2>
+<div id="today_attendance"></div>
+<br>
+<h2 id="attendance_title">출석부</h2>
 <div id="attendance"></div>
-<h2>순위</h2>
+<br>
+<h2 id="rank_title">순위</h2>
 <div id="rank"></div>
-<h2>출석률 그래프</h2>
+
+<h2 id="chart_title">출석률 그래프</h2>
 <div id="chart_div"></div>
-<h2>출석/미출석</h2>
+
+<h2 id="attend_noshow_title">출석/미출석</h2>
 <div id="attend_noshow_div"></div>
 
 {% endblock %}

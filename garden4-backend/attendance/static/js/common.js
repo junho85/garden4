@@ -1,3 +1,5 @@
+
+
 function getAvatarImgUrl(user) {
     return `https://avatars.githubusercontent.com/${user}`;
 }
@@ -19,7 +21,7 @@ function get_attendance() {
 </thead>
 <tbody>
 `;
-        $.each(data, function(index, row) {
+        $.each(data, function (index, row) {
             let first_ts = "";
             if (row.first_ts) {
                 first_ts = moment(new Date(row.first_ts)).format("YYYY-MM-DD HH:mm:ss")
