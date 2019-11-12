@@ -97,7 +97,7 @@
                 count_attendance++;
                 today_attendance_html += `<td>${row.name}<br><img src="${avatar_img_url}" width="60"><br>출석성공!</td>`;
             } else {
-                today_attendance_html += `<td>${row.name}<br>힘내세요!</td>`;
+                today_attendance_html += `<td>${row.name}<br><span style="font-size: 50px;">🏋</span></td>`;
             }
 
             if (idx % num_per_line === num_per_line - 1)
@@ -271,7 +271,7 @@
 <h2 id="users_title">정원사들</h2>
 <div id="users"></div>
 <br>
-<h2 id="today_attendance_title">오늘의 출석부</h2>
+<h2 id="today_attendance_title">오늘의 출석부</h2>1시간 마다 갱신 됩니다.
 <div id="today_attendance"></div>
 <br>
 <h2 id="attendance_title">출석부</h2>
