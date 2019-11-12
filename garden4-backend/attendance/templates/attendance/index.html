@@ -35,9 +35,9 @@
             let html = "";
             $.each(data, function(index, user) {
                 let avatar_img_url = getAvatarImgUrl(user);
-                html += `<a href="https://github.com/${user}" target="_blank">
-<img src="${avatar_img_url}" width="60" />
-</a>`;
+                html += `<a href="/attendance/users/${user}">`;
+                html += `<img src="${avatar_img_url}" width="60" />`;
+                html += `</a>`;
             });
             $("#users").html(html);
         });

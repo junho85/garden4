@@ -1,0 +1,22 @@
+{% extends 'attendance/base.html' %}
+
+{% block content %}
+
+    <h2>유저별 출석부</h2>
+    {{ user }} 의 출석부!<br>
+    <img src="https://avatars.githubusercontent.com/{{user}}" width="200"><br>
+    github: <a href="https://github.com/{{ user }}" target="_blank">https://github.com/{{ user }}</a><br>
+    <div>
+    <br>
+
+    {% for attendance in attendances %}
+        <h4>{{ attendance.date }}</h4>
+
+        {% for commit in attendance.commits %}
+        {{ commit.ts }}<br>
+        {{ commit.message|first|safe }}<br>
+        {% endfor %}
+    {% endfor %}
+    </div>
+
+{% endblock %}

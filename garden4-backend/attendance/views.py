@@ -3,7 +3,8 @@ from django.http import JsonResponse
 from datetime import datetime, timedelta
 from .garden import Garden
 import pprint
-
+import markdown
+from python_markdown_slack import PythonMarkdownSlack
 
 # Create your views here.
 def index(request):
@@ -19,6 +20,24 @@ def users(request):
 
 
 def user(request, user):
+    garden = Garden()
+    result = garden.find_attendance_by_user(user)
+
+    output = []
+    for (date, commits) in result.items():
+        for commit in commits:
+            commit["message"][0] = markdown.markdown(commit["message"][0], extensions=[PythonMarkdownSlack()])
+        output.append({"date": date, "commits": commits})
+
+    context = {
+        "user": user,
+        "attendances": output,
+    }
+
+    return render(request, 'attendance/users.html', context)
+
+
+def user_api(request, user):
     garden = Garden()
     result = garden.find_attendance_by_user(user)
 
