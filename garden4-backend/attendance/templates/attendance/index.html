@@ -115,7 +115,7 @@ ${item.user}</td>`;
                 trendlines: {1: {}}    // Draw a trendline for data series 0.
             };
 
-            const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            const chart = new google.visualization.LineChart(document.getElementById("attendance_rate"));
             chart.draw(chartData, options);
         }
     }
@@ -160,6 +160,39 @@ ${item.user}</td>`;
             };
 
             const chart = new google.visualization.ColumnChart(document.getElementById('attendance_rate_by_weekdays_chart'));
+            chart.draw(chartData, options);
+        }
+    }
+
+    // 시간별 출석 카운트
+    function draw_attendance_count_by_hours(context) {
+        let count_by_hours = []; // 시간별 출석수 [hour, count, count.toString() + "%"]
+
+        for (let i=0; i<24; i++) {
+            count_by_hours.push([i.toString(), context.hourly_count[i], context.hourly_count[i] + ""]);
+        }
+
+        // 출석수 그래프
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            const chartData = new google.visualization.DataTable();
+            chartData.addColumn('string', '요일');
+            chartData.addColumn('number', '출석수');
+            chartData.addColumn({type: 'string', role: 'annotation'});
+            chartData.addRows(count_by_hours);
+
+            const options = {
+                title: '시간별 출석수',
+                hAxis: {title: '시간'},
+                vAxis: {title: '출석수', maxValue: 100, minValue: 0},
+                legend: 'none',
+                width: "100%",
+                height: 400,
+                displayAnnotations: true,
+            };
+
+            const chart = new google.visualization.ColumnChart(document.getElementById("attendance_count_by_hours_chart"));
             chart.draw(chartData, options);
         }
     }
@@ -297,6 +330,7 @@ ${data_row.user}
                 total_days: 100, // 100일간 진행함
                 progressed_days: 0, // 진행 일수
                 daily_count: {}, // 날짜별 출석 카운트
+                hourly_count: {}, // 시간별 출석 카운트
                 daily_rate: [], // 날짜별 출석률 [formatted_date, rate, rate.toString() + "%"]
                 count_by_weekdays: {}, // 요일 갯수
                 attendance_count_by_weekdays: {}, // 요일별 출석수
@@ -320,7 +354,7 @@ ${data_row.user}
                 // 유저의 날짜별 출석 데이터 조회
                 $.each(context.formatted_dates, function (idx, formatted_date) {
                     let weekday = new Date(formatted_date).getDay(); // 요일
-                    // 요일 갯수 카운트
+                    // 요일별 출석 카운트
                     if (weekday in context.count_by_weekdays) {
                         context.count_by_weekdays[weekday]++;
                     } else {
@@ -363,7 +397,17 @@ ${data_row.user}
                 if (context.formatted_today in data_row.attendances) {
                     today_attendance.attend = data_row.attendances[context.formatted_today];
                 }
-                today_attendances.push(today_attendance)
+                today_attendances.push(today_attendance);
+
+                $.each(data_row.attendances, function (idx, attendance) {
+                    // 시간별 출석 카운트
+                    let hour = new Date(attendance).getHours();
+                    if (hour in context.hourly_count) {
+                        context.hourly_count[hour]++;
+                    } else {
+                        context.hourly_count[hour] = 1;
+                    }
+                });
             });
 
             // data 에 rank 추가
@@ -396,12 +440,14 @@ ${data_row.user}
 
             // 요일별 출석률
             draw_attendance_rate_by_weekdays(context);
+
+            // 시간별 출석수
+            draw_attendance_count_by_hours(context);
         }).fail(function (data) {
             console.log(data);
             alert("출석부 실패");
         });
     }
-
 </script>
 <div class="container">
     <h2 id="users_title">정원사들</h2>
@@ -427,11 +473,15 @@ ${data_row.user}
     <div id="rank"></div>
 
     <h2 id="chart_title">출석률 그래프</h2>
-    <div id="chart_div"></div>
+    <div id="attendance_rate"></div>
 
     <h2 id="attendance_rate_by_weekdays_title">요일별 출석률</h2>
     <div id="attendance_rate_by_weekdays"></div>
     <div id="attendance_rate_by_weekdays_chart"></div>
+
+    <h2 id="attendance_count_by_hours_title">시간별 출석수</h2>출석횟수(push)기준입니다. 여러번 하면 여러번 카운트됩니다.
+    <div id="attendance_count_by_hours"></div>
+    <div id="attendance_count_by_hours_chart"></div>
 </div>
 
 {% endblock %}
