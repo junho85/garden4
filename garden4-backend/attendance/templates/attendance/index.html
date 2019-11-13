@@ -38,7 +38,26 @@
         });
     }
 
-    // 순위 그리기
+    // 진행률 그리기
+    function draw_progress(context) {
+        let html = "";
+
+        let progress_rate = Math.round(context.progressed_days / context.total_days * 100);
+
+        html = `진행률 ${progress_rate}%
+         (총 ${context.total_days}일 중 ${context.progressed_days}일 진행)
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated"
+role="progressbar"
+aria-valuenow="${progress_rate}" aria-valuemin="0"
+aria-valuemax="100"
+style="width: ${progress_rate}%"></div>
+        </div>
+`;
+        $("#progress").html(html);
+    }
+
+    // 출석률 순위 그리기
     function draw_rank(data) {
         data.sort(function (a, b) {
             return a.rank - b.rank;
@@ -49,7 +68,7 @@
         $.each(data, function (idx, item) {
 
             let avatar_img_url = getAvatarImgUrl(item.user);
-            let num_per_line = 10;
+            let num_per_line = 7;
             if (idx % num_per_line === 0)
                 rank_html += `<tr>`;
 
@@ -70,10 +89,10 @@ ${item.user}</td>`;
     }
 
     // 출석/미출석 그리기
-    function draw_attend_noshow(total_attend_count, total_noshow_count) {
-        let total_attandance_rate = total_attend_count / (total_attend_count + total_noshow_count) * 100;
+    function draw_attend_noshow(context) {
+        let total_attandance_rate = context.total_attend_count / (context.total_attend_count + context.total_noshow_count) * 100;
         let attend_noshow_html = "";
-        attend_noshow_html += `${total_attend_count}/${total_noshow_count}<br>`;
+        attend_noshow_html += `${context.total_attend_count}/${context.total_noshow_count}<br>`;
         attend_noshow_html += `전체 출석률: ${Math.round(total_attandance_rate)}%`;
 
         $("#attend_noshow_div").html(attend_noshow_html);
@@ -81,7 +100,7 @@ ${item.user}</td>`;
 
     // 오늘의 출석부
     function draw_today_attendance(today_attendances) {
-        let today_attendance_html = `<table class="table table-sm table-rank"><tbody>`;
+        let today_attendance_html = `<table class="table table-sm table-today-attendance"><tbody>`;
 
         let count_attendance = 0;
         let num_per_line = 10;
@@ -102,7 +121,7 @@ ${item.user}</td>`;
             } else {
                 today_attendance_html += `<td>${row.name}<br>
 <a href="/attendance/users/${row.name}">
-<span style="font-size: 50px;">🏋</span>
+<span class="no-show">🏋</span>
 </a>
 </td>`;
             }
@@ -127,56 +146,67 @@ ${item.user}</td>`;
             dataType: "JSON",
             data: {}
         }).done(function (data) {
-            // data {user: user, attendances: }
+            // data = [{user: user, attendances: }, ...]
+            // rate, count 는 데이터 가공하면서 추가함
+
+            // 설정, 통계정보 등등 여러 정보 쌓아두는 곳
+            let context = {
+                total_attend_count: 0, // 전체 출석 카운트
+                total_noshow_count: 0, // 전체 미출석 카운트
+                start_day: new Date(2019, 10-1, 1), // 시작일 2019.10.01
+                today: new Date(), // 오늘
+                formatted_today: moment().format("YYYY-MM-DD"),
+                yesterday: new Date(new Date().setDate(new Date().getDate()-1)), // 어제
+                formatted_dates: [], // 시작일~어제 까지 YYYY-MM-DD 리스트
+                total_days: 100, // 100일간 진행함
+                progressed_days: 0, // 진행 일수
+            };
 
             // 출석부 날짜 범위 2019.10.01 ~ 어제
-            let yesterday = new Date(new Date().setDate(new Date().getDate()-1));
-            let formatted_dates = [];
-            for (let d = new Date(2019, 10 - 1, 1); d <= yesterday; d.setDate(d.getDate() + 1)) {
-                formatted_dates.push(moment(d).format("YYYY-MM-DD"));
+            for (let d = context.start_day; d <= context.yesterday; d.setDate(d.getDate() + 1)) {
+                context.formatted_dates.push(moment(d).format("YYYY-MM-DD"));
             }
 
-            let formatted_today = moment().format("YYYY-MM-DD");
+            // 진행 일수
+            context.progressed_days = context.formatted_dates.length;
 
             // data 에 rate, count 추가
-            let counts = [];
+            let counts_by_user = [];
             let daily_count = {};
-            let total_attend_count = 0;
-            let total_noshow_count = 0;
             let today_attendances = []; // 오늘 출석 데이터
 
             $.each(data, function(index, data_row) {
                 let count_by_user = 0;
-                $.each(formatted_dates, function (idx, formatted_date) {
+                $.each(context.formatted_dates, function (idx, formatted_date) {
                     if (formatted_date in data_row.attendances) {
                         count_by_user++;
                         if (!(formatted_date in daily_count)) {
                             daily_count[formatted_date] = 0;
                         }
                         daily_count[formatted_date]++;
-                        total_attend_count++;
+                        context.total_attend_count++;
                     } else {
-                        total_noshow_count++;
+                        context.total_noshow_count++;
                     }
                 });
 
-                counts.push(count_by_user);
+                counts_by_user.push(count_by_user);
 
-                // data 에 정보 추가
-                data_row["rate"] = (count_by_user / formatted_dates.length) * 100;
+                // data 에 rate, count 정보 추가
+                data_row["rate"] = (count_by_user / context.formatted_dates.length) * 100;
                 data_row["count"] = count_by_user;
 
                 // 오늘 출석 데이터
                 let today_attendance = {name: data_row.user, attend: null};
-                if (formatted_today in data_row.attendances) {
-                    today_attendance.attend = data_row.attendances[formatted_today];
+                if (context.formatted_today in data_row.attendances) {
+                    today_attendance.attend = data_row.attendances[context.formatted_today];
                 }
                 today_attendances.push(today_attendance)
             });
 
             // data 에 rank 추가
             $.each(data, function(index, data_row) {
-                data_row["rank"] = get_rank(data_row.count, counts);
+                data_row["rank"] = get_rank(data_row.count, counts_by_user);
             });
 
             // table 그리기
@@ -189,7 +219,7 @@ ${item.user}</td>`;
 <th>순위</th>
 `;
             // 날짜 헤더
-            $.each(formatted_dates, function(idx, formatted_date) {
+            $.each(context.formatted_dates, function(idx, formatted_date) {
                 html += `<th class="attendance_date">${formatted_date}</th>`;
             });
             html += `</tr></thead>
@@ -198,7 +228,7 @@ ${item.user}</td>`;
 
             $.each(data, function(index, data_row) {
                 let attendances_cell_html = "";
-                $.each(formatted_dates, function (idx, formatted_date) {
+                $.each(context.formatted_dates, function (idx, formatted_date) {
                     if (formatted_date in data_row.attendances) {
                         attendances_cell_html += `<td title="${data_row.attendances[formatted_date]}">O</td>`;
                     } else {
@@ -225,7 +255,7 @@ ${data_row.user}
 <td></td>`; // 빈칸들
 
             daily_rate_html += "<td>출석률</td>";
-            $.each(formatted_dates, function(idx, formatted_date) {
+            $.each(context.formatted_dates, function(idx, formatted_date) {
                 let rate = (daily_count[formatted_date] / data.length) * 100;
                 daily_rate_html += `<td>${Math.round(rate)}%</td>`;
 
@@ -238,6 +268,13 @@ ${data_row.user}
 
             // 순위별 표시
             draw_rank(data);
+
+            // 진행률
+            draw_progress(context);
+
+            // 출석/미출석 카운트
+            draw_attend_noshow(context);
+
 
             // 출석률 그래프
             google.charts.load('current', {'packages': ['corechart']});
@@ -265,9 +302,6 @@ ${data_row.user}
                 chart.draw(chartData, options);
             }
 
-            // 출석/미출석 카운트
-            draw_attend_noshow(total_attend_count, total_noshow_count);
-
             // 오늘 출석 현황
             draw_today_attendance(today_attendances);
         }).fail(function (data) {
@@ -277,23 +311,32 @@ ${data_row.user}
     }
 
 </script>
+<div class="container">
+    <h2 id="users_title">정원사들</h2>
+    <div id="users"></div>
+    <br>
+    <h2 id="progress_title">정원사들 시즌4 진행률</h2>
+    <div id="progress"></div>
+    <br>
+    <h2 id="attend_noshow_title">출석/미출석</h2>
+    <div id="attend_noshow_div"></div>
+    <br>
+    <h2 id="today_attendance_title">오늘의 출석부</h2>1시간 마다 갱신 됩니다.
+    <div id="today_attendance"></div>
+    <br>
+</div>
+<div class="container-fluid">
+    <h2 id="attendance_title">출석부</h2>
+    <div id="attendance"></div>
+    <br>
+</div>
+<div class="container">
+    <h2 id="rank_title">출석률 순위</h2>
+    <div id="rank"></div>
 
-<h2 id="users_title">정원사들</h2>
-<div id="users"></div>
-<br>
-<h2 id="today_attendance_title">오늘의 출석부</h2>1시간 마다 갱신 됩니다.
-<div id="today_attendance"></div>
-<br>
-<h2 id="attendance_title">출석부</h2>
-<div id="attendance"></div>
-<br>
-<h2 id="rank_title">순위</h2>
-<div id="rank"></div>
+    <h2 id="chart_title">출석률 그래프</h2>
+    <div id="chart_div"></div>
 
-<h2 id="chart_title">출석률 그래프</h2>
-<div id="chart_div"></div>
-
-<h2 id="attend_noshow_title">출석/미출석</h2>
-<div id="attend_noshow_div"></div>
+</div>
 
 {% endblock %}
