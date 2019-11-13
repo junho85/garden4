@@ -6,7 +6,7 @@ import pprint
 import markdown
 from python_markdown_slack import PythonMarkdownSlack
 
-# Create your views here.
+
 def index(request):
     context = {}
     return render(request, 'attendance/index.html', context)
@@ -19,19 +19,14 @@ def users(request):
     return JsonResponse(users, safe=False)
 
 
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
+# 유저별 출석부
 def user(request, user):
-    garden = Garden()
-    result = garden.find_attendance_by_user(user)
-
-    output = []
-    for (date, commits) in result.items():
-        for commit in commits:
-            commit["message"][0] = markdown.markdown(commit["message"][0], extensions=[PythonMarkdownSlack()])
-        output.append({"date": date, "commits": commits})
-
     context = {
         "user": user,
-        "attendances": output,
     }
 
     return render(request, 'attendance/users.html', context)
@@ -41,14 +36,14 @@ def user_api(request, user):
     garden = Garden()
     result = garden.find_attendance_by_user(user)
 
-    output = {}
-    output[user] = []
-
+    output = []
     for (date, commits) in result.items():
-        output[user].append({"date":date, "commits": commits})
-        print(date)
+        for commit in commits:
+            commit["message"][0] = markdown.markdown(commit["message"][0], extensions=[PythonMarkdownSlack()])
+            # commit["message"][0] = "<br>".join(commit["message"][0].split("\n"))
+        output.append({"date": date, "commits": commits})
 
-    return JsonResponse(output)
+    return JsonResponse(output, safe=False)
 
 
 # slack_messages 수집

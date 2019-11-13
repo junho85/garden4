@@ -1,22 +1,132 @@
 {% extends 'attendance/base.html' %}
 
 {% block content %}
+<style>
+.table-attendance {
+    text-align: center;
+}
 
+.attend-emoji {
+    font-size: 30px;
+}
+</style>
+<script>
+
+function draw_calendar(attendances) {
+
+    // convert data
+    let attendances_by_date = {};
+    $.each(attendances, function(idx, row) {
+        attendances_by_date[row.date] = row.commits;
+    });
+
+    let html = "";
+    const getDates = function (startDate, endDate) {
+        let dates = [],
+            currentDate = startDate,
+            addDays = function (days) {
+                const date = new Date(this.valueOf());
+                date.setDate(date.getDate() + days);
+                return date;
+            };
+        while (currentDate <= endDate) {
+            dates.push(currentDate);
+            currentDate = addDays.call(currentDate, 1);
+        }
+        return dates;
+    };
+
+    html += `<table class="table table-sm table-striped table-attendance">
+<thead>
+<th>일</th>
+<th>월</th>
+<th>화</th>
+<th>수</th>
+<th>목</th>
+<th>금</th>
+<th>토</th>
+</thead>
+<tbody>`;
+    const dates = getDates(new Date(2019, 9-1, 29), new Date());
+    $.each(dates, function (idx, date) {
+        if (idx % 7 === 0) {
+            html += `<tr>`;
+        }
+        let formatted_date = moment(date).format("YYYY-MM-DD");
+        let message = "";
+        if (formatted_date in attendances_by_date) {
+            message += `${formatted_date}<br><span class="attend-emoji">😀<span>`;
+        } else {
+            if (date < new Date(2019, 10-1, 1)) {
+                message = "";
+            } else {
+                message = `${formatted_date}<br><span class="attend-emoji">😰<span>`;
+            }
+
+        }
+        html += `<td>
+<div>
+${message}
+</div>
+</td>`;
+        if (idx % 7 === 6) {
+            html += `</tr>`;
+        }
+    });
+    html += `</tbody></table>`;
+
+    $("#attendance_calendar").html(html);
+}
+
+// 커밋 내역 그리기
+function draw_commits(attendances) {
+    let html = "";
+    $.each(attendances, function(idx, attendance) {
+        {#console.log(attendance);#}
+        html += `<h4>${attendance.date}</h4>`;
+        $.each(attendance.commits, function(idx, commit) {
+            commit.message[0] = commit.message[0].replace(/(?:\r\n|\r|\n)/g, '<br>');
+            html += `${commit.message[0]}`;
+            //$.each(commit.message, function(idx, message) {
+            //    console.log(message);
+            //    html += `${message}<br>`;
+            //});
+        })
+    });
+    $("#commits").html(html);
+}
+
+// 출석 데이터 조회
+function get_attendances(user) {
+    $.ajax({
+        method: "GET",
+        url: `/attendance/api/users/${user}`,
+        dataType: "JSON",
+        data: {}
+    }).done(function (data) {
+        draw_calendar(data);
+        draw_commits(data);
+    });
+}
+
+$(document).ready(function () {
+    get_attendances("{{ user }}");
+});
+
+</script>
+
+<div class="container">
     <h2>유저별 출석부</h2>
     {{ user }} 의 출석부!<br>
     <img src="https://avatars.githubusercontent.com/{{user}}" width="200"><br>
     github: <a href="https://github.com/{{ user }}" target="_blank">https://github.com/{{ user }}</a><br>
-    <div>
     <br>
 
-    {% for attendance in attendances %}
-        <h4>{{ attendance.date }}</h4>
+    <h2>나의 출석부</h2>
+    <div id="attendance_calendar"></div>
 
-        {% for commit in attendance.commits %}
-        {{ commit.ts }}<br>
-        {{ commit.message|first|safe }}<br>
-        {% endfor %}
-    {% endfor %}
-    </div>
+    <h2>커밋 내역</h2>
+    <div id="commits"></div>
+</div>
 
 {% endblock %}
