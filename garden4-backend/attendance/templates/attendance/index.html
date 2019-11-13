@@ -5,12 +5,7 @@
 
 <script>
     $(document).ready(function () {
-        console.log("ready!");
-
         get_users();
-
-        {#let yesterday = new Date(new Date().setDate(new Date().getDate()-1));#}
-        {#$("#date").val(moment(yesterday).format("YYYYMMDD"));#}
         get_attendances();
     });
 
@@ -59,7 +54,11 @@
                 rank_html += `<tr>`;
 
             rank_html += `<td>${item.rank}등<br>${Math.round(item.rate)}%</td>`;
-            rank_html += `<td><img src="${avatar_img_url}" width="80" style="vertical-align:top"/>${item.user}</td>`;
+            rank_html += `<td>
+<a href="/attendance/users/${item.user}">
+<img src="${avatar_img_url}" width="80" style="vertical-align:top"/>
+</a>
+${item.user}</td>`;
 
             if (idx % num_per_line === num_per_line - 1)
                 rank_html += `</tr>`;
@@ -95,9 +94,17 @@
                 let avatar_img_url = getAvatarImgUrl(row.name);
                 formatted_datetime = moment(row.attend).format("YYYY-MM-DD HH:mm:ss");
                 count_attendance++;
-                today_attendance_html += `<td>${row.name}<br><img src="${avatar_img_url}" width="60"><br>출석성공!</td>`;
+                today_attendance_html += `<td>${row.name}<br>
+<a href="/attendance/users/${row.name}">
+<img src="${avatar_img_url}" width="60">
+</a>
+<br>출석성공!</td>`;
             } else {
-                today_attendance_html += `<td>${row.name}<br><span style="font-size: 50px;">🏋</span></td>`;
+                today_attendance_html += `<td>${row.name}<br>
+<a href="/attendance/users/${row.name}">
+<span style="font-size: 50px;">🏋</span>
+</a>
+</td>`;
             }
 
             if (idx % num_per_line === num_per_line - 1)
@@ -201,7 +208,10 @@
 
                 html += `<tr data-count="${data_row.count}" data-user="${data_row.user}" class="user">`;
                 html += `<td>${index + 1}</td>`;
-                html += `<td><a href="https://github.com/${data_row.user}" target="_blank">${data_row.user}</a></td>`;
+                html += `<td>
+<a href="/attendance/users/${data_row.user}" target="_blank">
+${data_row.user}
+</a></td>`;
                 html += `<td>${Math.round(data_row.rate)}%</td>`;
                 html += `<td class="rank">${data_row.rank}</td>`;
                 html += attendances_cell_html;
