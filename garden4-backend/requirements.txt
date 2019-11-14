@@ -5,3 +5,4 @@ pyyaml
 markdown2
 python-markdown-slack
 markdown
+konlpy
