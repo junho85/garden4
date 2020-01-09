@@ -47,7 +47,15 @@ function draw_calendar(attendances) {
 <th>토</th>
 </thead>
 <tbody>`;
-    const dates = getDates(new Date(2019, 9-1, 29), new Date());
+    let today = new Date();
+    let lastday = new Date(2019, 10-1, 1 + {{ gardening_days }} - 1);
+    let endday;
+    if (lastday < today) {
+        endday = lastday;
+    } else {
+        endday = today;
+    }
+    const dates = getDates(new Date(2019, 9-1, 29), endday);
     $.each(dates, function (idx, date) {
         if (idx % 7 === 0) {
             html += `<tr>`;

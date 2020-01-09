@@ -8,7 +8,10 @@ from python_markdown_slack import PythonMarkdownSlack
 
 
 def index(request):
-    context = {}
+    garden = Garden()
+    context = {
+        "gardening_days": garden.get_gardening_days()
+    }
     return render(request, 'attendance/index.html', context)
 
 
@@ -26,13 +29,16 @@ def daterange(start_date, end_date):
 
 # 유저별 출석부
 def user(request, user):
+    garden = Garden()
     context = {
         "user": user,
+        "gardening_days": garden.get_gardening_days()
     }
 
     return render(request, 'attendance/users.html', context)
 
 
+# 유저의 출석데이터
 def user_api(request, user):
     garden = Garden()
     result = garden.find_attendance_by_user(user)

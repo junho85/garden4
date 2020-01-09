@@ -43,16 +43,26 @@
 
     // 진행률 그리기
     function draw_progress(context) {
-        let html = "";
+        let html;
 
         let progress_rate = Math.round(context.progressed_days / context.total_days * 100);
 
-        html = `진행률 ${progress_rate}%
-         (총 ${context.total_days}일 중 ${context.progressed_days}일 진행)
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped progress-bar-animated"
+        if (context.progressed_days >= {{ gardening_days }}) {
+            html = `진행률 100% (총 ${context.total_days}일 중 ${context.progressed_days}일 완료)`;
+        } else {
+            html = `진행률 ${progress_rate}% (총 ${context.total_days}일 중 ${context.progressed_days}일 진행)`;
+        }
+
+        html += `<div class="progress">`;
+        if (context.progressed_days >= {{ gardening_days }}) {
+            html += `<div class="progress-bar progress-bar-striped"`;
+        } else {
+            html += `<div class="progress-bar progress-bar-striped progress-bar-animated"`;
+        }
+        html += `
 role="progressbar"
-aria-valuenow="${progress_rate}" aria-valuemin="0"
+aria-valuenow="${progress_rate}"
+aria-valuemin="0"
 aria-valuemax="100"
 style="width: ${progress_rate}%"></div>
         </div>
@@ -208,7 +218,7 @@ ${item.user}</td>`;
     }
 
     // 오늘의 출석부
-    function draw_today_attendance(today_attendances) {
+    function draw_today_attendance(context, today_attendances) {
         let today_attendance_html = `<table class="table table-sm table-today-attendance"><tbody>`;
 
         let count_attendance = 0;
@@ -227,6 +237,12 @@ ${item.user}</td>`;
 <img src="${avatar_img_url}" width="60">
 </a>
 <br>출석성공!</td>`;
+            } else if (context.progressed_days >= {{ gardening_days }}) {
+                today_attendance_html += `<td>${row.name}<br>
+<a href="/attendance/users/${row.name}">
+<span class="no-show">😀</span>
+</a>
+</td>`;
             } else {
                 today_attendance_html += `<td>${row.name}<br>
 <a href="/attendance/users/${row.name}">
@@ -241,8 +257,11 @@ ${item.user}</td>`;
         });
 
         today_attendance_html += `</tbody></table>`;
-        let rate = Math.round(count_attendance/today_attendances.length*100);
-        today_attendance_html += `오늘의 출석률: ${rate}%`;
+
+        if (!(context.progressed_days >= {{ gardening_days }})) {
+            let rate = Math.round(count_attendance/today_attendances.length*100);
+            today_attendance_html += `오늘의 출석률: ${rate}%`;
+        }
 
         $("#today_attendance").html(today_attendance_html);
     }
@@ -336,9 +355,13 @@ ${data_row.user}
                 attendance_count_by_weekdays: {}, // 요일별 출석수
             };
 
-            // 출석부 날짜 범위 2019.10.01 ~ 어제
+            // 출석부 날짜 범위 2019.10.01 ~ 어제 (단, 마지막 날 까지만)
             for (let d = context.start_day; d <= context.yesterday; d.setDate(d.getDate() + 1)) {
                 context.formatted_dates.push(moment(d).format("YYYY-MM-DD"));
+
+                if (context.formatted_dates.length >= {{ gardening_days }}) {
+                    break;
+                }
             }
 
             // 진행 일수
@@ -436,7 +459,7 @@ ${data_row.user}
             draw_attendance_chart(context);
 
             // 오늘 출석 현황
-            draw_today_attendance(today_attendances);
+            draw_today_attendance(context, today_attendances);
 
             // 요일별 출석률
             draw_attendance_rate_by_weekdays(context);
