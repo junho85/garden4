@@ -3,6 +3,5 @@ Django
 pymongo
 pyyaml
 markdown2
-python-markdown-slack
 markdown
-konlpy
+python-markdown-slack
