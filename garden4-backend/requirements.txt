@@ -2,6 +2,5 @@ slackclient
 Django
 pymongo
 pyyaml
-markdown2
-markdown
+markdown==2.6.6
 python-markdown-slack
