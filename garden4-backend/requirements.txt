@@ -1,6 +1,6 @@
 slackclient==2.3.1
 Django==2.2.6
 pymongo==3.9.0
-pyyaml==5.1.2
+pyyaml==5.4
 markdown==2.6.6
 python-markdown-slack==1.0.6
