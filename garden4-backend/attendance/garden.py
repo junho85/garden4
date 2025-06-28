@@ -16,20 +16,21 @@ class Garden:
         path = os.path.join(BASE_DIR, 'config.ini')
         config.read(path)
 
-        slack_api_token = config['DEFAULT']['SLACK_API_TOKEN']
+        # Use environment variables if available, otherwise fallback to config file
+        slack_api_token = os.getenv('SLACK_API_TOKEN', config['DEFAULT']['SLACK_API_TOKEN'])
         self.slack_client = WebClient(token=slack_api_token)
 
-        self.channel_id = config['DEFAULT']['CHANNEL_ID']
+        self.channel_id = os.getenv('CHANNEL_ID', config['DEFAULT']['CHANNEL_ID'])
 
-        # PostgreSQL settings
-        self.pg_database = config['POSTGRESQL']['DATABASE']
-        self.pg_host = config['POSTGRESQL']['HOST']
-        self.pg_port = config['POSTGRESQL']['PORT']
-        self.pg_user = config['POSTGRESQL']['USER']
-        self.pg_password = config['POSTGRESQL']['PASSWORD']
-        self.pg_schema = config['POSTGRESQL']['SCHEMA']
+        # PostgreSQL settings - prioritize environment variables
+        self.pg_database = os.getenv('DB_NAME', config['POSTGRESQL']['DATABASE'])
+        self.pg_host = os.getenv('DB_HOST', config['POSTGRESQL']['HOST'])
+        self.pg_port = os.getenv('DB_PORT', config['POSTGRESQL']['PORT'])
+        self.pg_user = os.getenv('DB_USER', config['POSTGRESQL']['USER'])
+        self.pg_password = os.getenv('DB_PASSWORD', config['POSTGRESQL']['PASSWORD'])
+        self.pg_schema = os.getenv('DB_SCHEMA', config['POSTGRESQL']['SCHEMA'])
 
-        self.gardening_days = config['DEFAULT']['GARDENING_DAYS']
+        self.gardening_days = os.getenv('GARDENING_DAYS', config['DEFAULT']['GARDENING_DAYS'])
 
         # users list ['junho85', 'user2', 'user3']
         self.users = config['GITHUB']['USERS'].split(',')

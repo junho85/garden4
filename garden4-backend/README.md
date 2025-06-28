@@ -16,29 +16,70 @@ Garden4는 GitHub 커밋 활동을 Slack을 통해 수집하고 출석 현황을
 
 ## 기술 스택
 
-- **Framework**: Django
-- **Database**: MongoDB (pymongo)
-- **Integration**: Slack API (slackclient)
+- **Framework**: Django 4.2.11
+- **Database**: PostgreSQL (Supabase)
+- **Integration**: Slack API (slack-sdk)
 - **기타**: YAML, Markdown
+- **Deployment**: Docker, Docker Compose
 
 ## 설치 및 실행
 
 ### 요구사항
 
-- Python 3.x
-- MongoDB
+- Python 3.11+
+- Docker (권장)
 - Slack API Token
 
-### 설치
+## Docker 실행 (권장)
+
+### 로컬 개발 환경
+
+1. **Docker-Garden 저장소에서 실행** (권장):
+```bash
+cd /Users/junho85/WebstormProjects/docker-garden
+
+# garden4 서비스만 실행
+docker-compose up web-garden4
+```
+- 포트: http://localhost:8004
+- 로컬 소스 코드를 자동으로 빌드
+- 코드 변경 시 자동 반영
+
+2. **프로젝트 디렉토리에서 직접 실행**:
+```bash
+cd /path/to/garden4-backend
+
+# Docker 이미지 빌드 및 실행
+docker build -t garden4-backend .
+docker run -p 8000:8000 garden4-backend
+```
+
+### 배포용 이미지 빌드
+
+멀티 플랫폼 지원 (Apple Silicon + AMD64):
 
 ```bash
-# 가상환경 생성 및 활성화
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+cd /path/to/garden4-backend
 
-# 의존성 설치
-pip install -r requirements.txt
+# 멀티 플랫폼 빌드 및 Docker Hub 푸시
+./build-and-push.sh
 ```
+
+또는 수동으로:
+```bash
+# buildx 빌더 생성
+docker buildx create --name multiplatform --use
+
+# 멀티 플랫폼 빌드 및 푸시
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --tag junho85/garden4:latest \
+  --tag junho85/garden4:$(date +%Y%m%d_%H%M%S) \
+  --push \
+  .
+```
+
+## 로컬 개발 환경 (Python)
 
 ### 설정
 
@@ -50,10 +91,13 @@ CHANNEL_ID = your_channel_id
 GARDENING_DAYS = 100
 START_DATE = 2019-10-01
 
-[MONGO]
-DATABASE = garden4
-HOST = localhost
-PORT = 27017
+[POSTGRESQL]
+DATABASE = postgres
+HOST = your_supabase_host
+PORT = 6543
+USER = your_user
+PASSWORD = your_password
+SCHEMA = garden4
 
 [GITHUB]
 USERS = user1,user2,user3
@@ -67,38 +111,21 @@ user2:
   slack: slack_username2
 ```
 
-### 실행
+### 설치 및 실행
 
 ```bash
+# 가상환경 생성 및 활성화
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 의존성 설치
+pip install -r requirements.txt
+
 # 데이터베이스 마이그레이션
 python manage.py migrate
 
 # 개발 서버 실행
 python manage.py runserver
-```
-
-
-### Docker를 이용한 실행
-Apple Silicon Mac에서 Docker를 사용하여 실행할 수 있습니다. Docker가 설치되어 있어야 합니다.
-
-먼저, Docker 네트워크를 생성합니다.
-```bash
-docker network create my-app-network
-```
-
-다음으로, 네트워크에 연결해서 MongoDB 컨테이너를 실행합니다.
-```bash
-docker run -d --name mymongo --network my-app-network mongo
-```
-
-MongoDB 컨테이너가 실행된 후, MongoDB에 데이터를 복원합니다. `garden` 디렉토리에 있는 데이터를 `/garden` 경로로 복원합니다.
-```bash
-mongorestore --host="localhost" --port="27017" --db="garden" /Users/junho85/work/garden4_move/garden
-```
-
-이제 Django 애플리케이션을 실행할 수 있습니다. 현재 디렉토리를 `/app`으로 설정하고, `requirements.txt` 파일을 사용하여 의존성을 설치한 후, Django 개발 서버를 실행합니다.
-```bash
-docker run -it --rm -p 8000:8000 --network my-app-network -v "$(pwd):/app" -w /app python:3.6.8 bash -c "pip install -r requirements.txt && python manage.py runserver 0.0.0.0:8000"
 ```
 
 ## 주요 명령어

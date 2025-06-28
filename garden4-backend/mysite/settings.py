@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = ')dhyx_u-p#2=7skn%yxl6vs$+ew5%=b5wa7$k70%-rx@_jflnz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes']
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'labs.junho85.pe.kr', 'junho85.vps.phps.kr', 'garden4.junho85.pe.kr']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',') + ['labs.junho85.pe.kr', 'junho85.vps.phps.kr', 'garden4.junho85.pe.kr']
 
 
 # Application definition
@@ -123,3 +123,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Static files (CSS, JavaScript, Images)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
