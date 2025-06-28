@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"garden.slack_messages"},{"v":{"$numberInt":"2"},"unique":true,"key":{"ts":{"$numberInt":"1"}},"name":"ts_1","ns":"garden.slack_messages"}],"uuid":"c65cf4d62fda4db5a9345bc8b2aea54d"}
