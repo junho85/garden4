@@ -1,6 +1,6 @@
 import configparser
 from datetime import date, timedelta, datetime
-import slack
+from slack_sdk import WebClient
 import pymongo
 import pprint
 import os
@@ -14,7 +14,7 @@ class Garden:
         config.read(path)
 
         slack_api_token = config['DEFAULT']['SLACK_API_TOKEN']
-        self.slack_client = slack.WebClient(token=slack_api_token)
+        self.slack_client = WebClient(token=slack_api_token)
 
         self.channel_id = config['DEFAULT']['CHANNEL_ID']
 
@@ -34,7 +34,7 @@ class Garden:
         path = os.path.join(BASE_DIR, 'users.yaml')
 
         with open(path) as file:
-            self.users_with_slackname = yaml.full_load(file)
+            self.users_with_slackname = yaml.safe_load(file)
 
         self.start_date = datetime.strptime(config['DEFAULT']['START_DATE'], "%Y-%m-%d").date()  # start_date e.g.) 2019-10-01
 
@@ -115,11 +115,11 @@ class Garden:
         # print(datetime.fromtimestamp(latest))
         # print(self.channel_id)
 
-        response = self.slack_client.channels_history(
+        response = self.slack_client.conversations_history(
             channel=self.channel_id,
             latest=str(latest),
             oldest=str(oldest),
-            count=1000
+            limit=1000
         )
 
         conn = self.connect_mongo()
@@ -145,7 +145,7 @@ class Garden:
         db = conn.get_database(mongo_database)
 
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
-        mongo_collection.remove()
+        mongo_collection.delete_many({})
 
     """
     특정일의 출석 데이터 불러오기

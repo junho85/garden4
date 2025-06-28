@@ -4,7 +4,23 @@ from datetime import datetime, timedelta
 from .garden import Garden
 import pprint
 import markdown
-from python_markdown_slack import PythonMarkdownSlack
+import re
+
+
+def process_slack_links(text):
+    """
+    Slack 링크 포맷 <url|text>를 HTML 링크로 변환
+    """
+    # <url|text> 패턴을 찾아서 <a href="url">text</a>로 변환
+    pattern = r'<([^|>]+)\|([^>]+)>'
+    def replace_link(match):
+        url = match.group(1)
+        text = match.group(2)
+        # 백틱으로 둘러싸인 텍스트는 <code> 태그로 변환
+        text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+        return f'<a href="{url}">{text}</a>'
+    
+    return re.sub(pattern, replace_link, text)
 
 
 def index(request):
@@ -46,7 +62,9 @@ def user_api(request, user):
     output = []
     for (date, commits) in result.items():
         for commit in commits:
-            commit["message"][0] = markdown.markdown(commit["message"][0], extensions=[PythonMarkdownSlack()])
+            # Slack 링크 포맷을 먼저 처리한 후 마크다운 적용
+            processed_text = process_slack_links(commit["message"][0])
+            commit["message"][0] = markdown.markdown(processed_text)
             # commit["message"][0] = "<br>".join(commit["message"][0].split("\n"))
         output.append({"date": date, "commits": commits})
 
