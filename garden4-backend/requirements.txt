@@ -1,5 +1,6 @@
 slack-sdk==3.27.1
 Django==4.2.11
-pymongo==4.6.3
+psycopg2-binary==2.9.9
 pyyaml==6.0.1
 markdown>=3.0,<4.0
+pytz==2025.2
