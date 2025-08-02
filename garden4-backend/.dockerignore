@@ -68,3 +68,11 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Scripts
+build-and-push.sh
+
+# Configuration samples
+*.sample
+attendance/config.ini
+attendance/users.yaml
