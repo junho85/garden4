@@ -1,5 +1,17 @@
-garden4-backend/attendance/config.ini
-db.sqlite3
-users.yaml
+# Python
+__pycache__
+*.pyc
+env
 venv
+.venv
+
+# Django
+db.sqlite3
+attendance/config.ini
+users.yaml
+
+# IDE
 .idea
+
+# OS
+.DS_Store
