@@ -91,7 +91,7 @@ CHANNEL_ID = your_channel_id
 GARDENING_DAYS = 100
 START_DATE = 2019-10-01
 
-[POSTGRESQL]
+[DATABASE]
 DATABASE = postgres
 HOST = your_supabase_host
 PORT = 6543

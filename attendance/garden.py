@@ -23,12 +23,12 @@ class Garden:
         self.channel_id = os.getenv('CHANNEL_ID', config['DEFAULT']['CHANNEL_ID'])
 
         # PostgreSQL settings - prioritize environment variables
-        self.pg_database = os.getenv('DB_NAME', config['POSTGRESQL']['DATABASE'])
-        self.pg_host = os.getenv('DB_HOST', config['POSTGRESQL']['HOST'])
-        self.pg_port = os.getenv('DB_PORT', config['POSTGRESQL']['PORT'])
-        self.pg_user = os.getenv('DB_USER', config['POSTGRESQL']['USER'])
-        self.pg_password = os.getenv('DB_PASSWORD', config['POSTGRESQL']['PASSWORD'])
-        self.pg_schema = os.getenv('DB_SCHEMA', config['POSTGRESQL']['SCHEMA'])
+        self.pg_database = os.getenv('DB_NAME', config['DATABASE']['DATABASE'])
+        self.pg_host = os.getenv('DB_HOST', config['DATABASE']['HOST'])
+        self.pg_port = os.getenv('DB_PORT', config['DATABASE']['PORT'])
+        self.pg_user = os.getenv('DB_USER', config['DATABASE']['USER'])
+        self.pg_password = os.getenv('DB_PASSWORD', config['DATABASE']['PASSWORD'])
+        self.pg_schema = os.getenv('DB_SCHEMA', config['DATABASE']['SCHEMA'])
 
         self.gardening_days = os.getenv('GARDENING_DAYS', config['DEFAULT']['GARDENING_DAYS'])
 

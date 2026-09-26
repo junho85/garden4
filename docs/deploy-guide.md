@@ -42,7 +42,7 @@ CHANNEL_ID = your-channel-id
 START_DATE = 2019-10-01
 GARDENING_DAYS = 100
 
-[POSTGRESQL]
+[DATABASE]
 DATABASE = postgres
 HOST = your-db-host
 PORT = 6543
